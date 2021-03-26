@@ -12,12 +12,12 @@
   <li>Nodejs</li> 
   <li>Expressjs</li> 
   <li>Socket.io</li> 
-  <li>Session</li>  
+  <li>JWT</li>  
 </ul>
 
 <i>Frontend:</i>
 <ul>
-  <li>Html & Css</li> 
-  <li>Javascript</li> 
-  <li>Bootstrap</li>  
+  <li>Html</li>
+  <li>Css & Bootstrap</li>  
+  <li>Javascript & JQuery</li> 
 </ul>

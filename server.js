@@ -5,7 +5,8 @@ const dotenv = require('dotenv');
 const path = require("path");
 const socketio = require("socket.io");
 const router = require('./routes/router');
-const { newUser } = require("./utils/users");
+const { verify } = require('./utils/tokenAuth');
+const { addUser, removeUser, getUsersList } = require("./utils/users");
 
 // Constants
 const app = express();
@@ -22,14 +23,29 @@ app.use('/', router);
 
 // Socket io Connection
 io.on('connection', socket => {
-    io.emit('message', 'A user connected');
+    
+    socket.on('join_app', (info) => {
+        let token_result = verify(info.token);
 
-    socket.on('chat_message', (token) => {
-        console.log(token);
+        if (token_result) {
+            user = addUser(socket.id, token_result.username, info.random);
+        }
+
+        io.emit('users_list', getUsersList());
+    });
+
+    socket.on('chat_message', (info) => {
+        let token_result = verify(info.token);
+
+        if (token_result) {
+            //socket.emit('chat_message', info.message); // From
+            io.to(info.to).emit('chat_message', info.message); // To
+        }
     });
 
     socket.on('disconnect', () => {
-        io.emit('message', 'A user disconnected');
+        removeUser(socket.id);
+        io.emit('users_list', getUsersList());
     });
 });
 

@@ -185,7 +185,7 @@ body {
     line-height: 100%;
 }
 
-.selected-user span.name {
+.selected-user span.to-name {
     font-weight: 700;
 }
 
