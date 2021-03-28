@@ -1,6 +1,7 @@
 const socket = io();
 const token = ("; " + document.cookie).split("; chatapp_token=").pop().split(";").shift();
 const random = Math.floor(Math.random() * 8) + 1;
+const chat_container = document.querySelector('.chatContainerScroll');
 
 let userInfo = {};
 let to_id = "";
@@ -36,6 +37,9 @@ socket.on('chat_message', res => {
             </li>
         `);
     }
+
+    // Scroll down
+    chat_container.scrollTop = chat_container.scrollHeight;
 });
 
 socket.on('users_list', users => {
@@ -57,13 +61,19 @@ socket.on('users_list', users => {
         `);
     };
 
-    $('.person').off('click');
+    $('[class=person]').off('click');
 
     $('[class=person]').click(e => {
         let person = users.filter(item => item.id == e.target.id)[0];
         to_id = person.id;
 
-        $('.to-name').html(person.username)
+        $.get('/find/' + person.id, (result) => {
+            if (result) {
+                $('.to-name').html(result.username);
+                $('.chat-profile').attr('src', `https://www.bootdey.com/img/Content/avatar/avatar${result.random}.png`);
+                $('#chat-screen').css('display', 'block');
+            }
+        });
     });
 });
 

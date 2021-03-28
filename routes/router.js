@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { sign, verify } = require("../utils/tokenAuth");
+const { findUser } = require("../utils/users");
 
 // Routers
 router.get('/', (req, res) => res.sendFile('public/login.html', { root: __dirname + '/..' }));
@@ -18,5 +19,7 @@ router.get('/chat', (req, res) => {
         
     return res.sendFile('public/chat.html', { root: __dirname + '/..' })
 });
+
+router.get('/find/:id', (req, res) => res.json(findUser(req.params.id)));
 
 module.exports = router;

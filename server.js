@@ -38,10 +38,9 @@ io.on('connection', socket => {
 
     socket.on('chat_message', (res) => {
         let token_result = verify(res.token);
+        let from_user = findUser(socket.id);
 
-        if (token_result) {
-            let from_user = findUser(socket.id);
-
+        if (token_result && from_user) {
             const message = {
                 username: token_result.username,
                 user_random: from_user.random,

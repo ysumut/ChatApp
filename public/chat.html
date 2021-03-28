@@ -21,13 +21,12 @@
                 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
                     <h5 class="title">Chat App</h5>
                 </div>
-                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
+                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12 text-right">
                     <div class="daterange-container">
                         <div class="date-range">
                             <div id="reportrange">
                                 <i class="fa fa-calendar cal"></i>
-                                <span class="range-text">Jun 11, 2019 - Jul 10, 2019</span>
-                                <i class="fa fa-chevron-down arrow"></i>
+                                <script> document.write(new Date().toLocaleString()) </script>
                             </div>
                         </div>
                     </div>
@@ -65,12 +64,17 @@
                                     </ul>
                                 </div>
                             </div>
-                            <div class="col-xl-8 col-lg-8 col-md-8 col-sm-9 col-9">
+                            <div class="col-xl-8 col-lg-8 col-md-8 col-sm-9 col-9" id="chat-screen" style="display: none;">
                                 <div class="selected-user">
-                                    <span>To: <span class="to-name">Emily Russell</span></span>
+                                    <span>To: <span class="to-name"> - </span></span>
+                                    <span class="float-right pt-3">
+                                        <img class="chat-profile">
+                                    </span>
                                 </div>
                                 <div class="chat-container">
-                                    <ul class="chat-box chatContainerScroll"></ul>
+                                    <ul class="chatContainerScroll" style="height: 400px; overflow-y: scroll;">
+                                    
+                                    </ul>
                                     <div class="form-group mt-3 mb-0">
                                         <textarea class="form-control" id="message-area" placeholder="Type your message here..."></textarea>
                                     </div>
