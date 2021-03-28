@@ -2,21 +2,40 @@ const socket = io();
 const token = ("; " + document.cookie).split("; chatapp_token=").pop().split(";").shift();
 const random = Math.floor(Math.random() * 8) + 1;
 
+let userInfo = {};
 let to_id = "";
 
 socket.emit('join_app', { token, random });
 
-socket.on('chat_message', msg => {
-    $('.chatContainerScroll').append(`
+socket.on('user_me', res => {
+    userInfo = res;
+});
+
+socket.on('chat_message', res => {
+    if (res.type == 'get') {
+        $('.chatContainerScroll').append(`
         <li class="chat-left">
             <div class="chat-avatar">
-                <img src="https://www.bootdey.com/img/Content/avatar/avatar8.png">
-                <div class="chat-name">Sam</div>
+                <img src="https://www.bootdey.com/img/Content/avatar/avatar${res.user_random}.png">
+                <div class="chat-name">${res.username}</div>
             </div>
-            <div class="chat-text">${msg}</div>
-            <div class="chat-hour">08:56 <span class="fa fa-check-circle"></span></div>
+            <div class="chat-text">${res.msg}</div>
+            <div class="chat-hour">${res.date.substr(11, 5)} <span class="fa fa-check-circle"></span></div>
         </li>
-    `);
+        `);
+    }
+    if (res.type == 'send') {
+        $('.chatContainerScroll').append(`
+            <li class="chat-right">
+                <div class="chat-hour">${res.date.substr(11, 5)} <span class="fa fa-check-circle"></span></div>
+                <div class="chat-text">${res.msg}</div>
+                <div class="chat-avatar">
+                    <img src="https://www.bootdey.com/img/Content/avatar/avatar${res.user_random}.png">
+                    <div class="chat-name">${res.username}</div>
+                </div>
+            </li>
+        `);
+    }
 });
 
 socket.on('users_list', users => {
@@ -53,19 +72,6 @@ $('#message-area').keypress(e => {
         let msg = e.target.value.trim();
         e.target.value = '';
 
-        $('.chatContainerScroll').append(`
-            <li class="chat-right">
-                <div class="chat-hour">08:56 <span class="fa fa-check-circle"></span></div>
-                <div class="chat-text">${msg}</div>
-                <div class="chat-avatar">
-                    <img src="https://www.bootdey.com/img/Content/avatar/avatar${random}.png">
-                    <div class="chat-name">Sam</div>
-                </div>
-            </li>
-        `);
-
-        socket.emit('chat_message', { token: token, to: to_id, message: msg});
+        socket.emit('chat_message', { token, to_id, msg });
     }
-
-
 })

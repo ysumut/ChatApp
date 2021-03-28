@@ -6,7 +6,7 @@ const path = require("path");
 const socketio = require("socket.io");
 const router = require('./routes/router');
 const { verify } = require('./utils/tokenAuth');
-const { addUser, removeUser, getUsersList } = require("./utils/users");
+const { addUser, removeUser, getUsersList, findUser } = require("./utils/users");
 
 // Constants
 const app = express();
@@ -23,24 +23,39 @@ app.use('/', router);
 
 // Socket io Connection
 io.on('connection', socket => {
-    
+
     socket.on('join_app', (info) => {
         let token_result = verify(info.token);
 
         if (token_result) {
             user = addUser(socket.id, token_result.username, info.random);
         }
+        else return;
 
+        socket.emit('user_me', user);
         io.emit('users_list', getUsersList());
     });
 
-    socket.on('chat_message', (info) => {
-        let token_result = verify(info.token);
+    socket.on('chat_message', (res) => {
+        let token_result = verify(res.token);
 
         if (token_result) {
-            //socket.emit('chat_message', info.message); // From
-            io.to(info.to).emit('chat_message', info.message); // To
+            let from_user = findUser(socket.id);
+
+            const message = {
+                username: token_result.username,
+                user_random: from_user.random,
+                msg: res.msg,
+                date: new Date().toISOString()
+            };
+
+            message.type = 'send';
+            socket.emit('chat_message', message); // From
+
+            message.type = 'get';
+            io.to(res.to_id).emit('chat_message', message); // To
         }
+        else return;
     });
 
     socket.on('disconnect', () => {
