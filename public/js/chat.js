@@ -13,6 +13,8 @@ socket.on('user_me', res => {
 });
 
 socket.on('chat_message', res => {
+    let message_date = new Date(res.date).toLocaleTimeString().substr(0, 5);
+
     if (res.type == 'get') {
         $('.chatContainerScroll').append(`
         <li class="chat-left">
@@ -21,14 +23,14 @@ socket.on('chat_message', res => {
                 <div class="chat-name">${res.username}</div>
             </div>
             <div class="chat-text">${res.msg}</div>
-            <div class="chat-hour">${res.date.substr(11, 5)} <span class="fa fa-check-circle"></span></div>
+            <div class="chat-hour">${message_date} <span class="fa fa-check-circle"></span></div>
         </li>
         `);
     }
     if (res.type == 'send') {
         $('.chatContainerScroll').append(`
             <li class="chat-right">
-                <div class="chat-hour">${res.date.substr(11, 5)} <span class="fa fa-check-circle"></span></div>
+                <div class="chat-hour">${message_date} <span class="fa fa-check-circle"></span></div>
                 <div class="chat-text">${res.msg}</div>
                 <div class="chat-avatar">
                     <img src="https://www.bootdey.com/img/Content/avatar/avatar${res.user_random}.png">
@@ -46,7 +48,6 @@ socket.on('users_list', users => {
     $('.users').html('');
 
     for (let each of users) {
-
         $('.users').append(`
             <li class="person" id="${each.id}">
                 <div class="user">
@@ -60,21 +61,23 @@ socket.on('users_list', users => {
             </li>
         `);
     };
+});
 
-    $('[class=person]').off('click');
+$(document).on('click', '.person', e => {
+    let person_id = e.currentTarget.id;
 
-    $('[class=person]').click(e => {
-        let person = users.filter(item => item.id == e.target.id)[0];
-        to_id = person.id;
+    if (person_id) {
+        to_id = person_id;
 
-        $.get('/find/' + person.id, (result) => {
+        $.get('/find/' + person_id, (result) => {
             if (result) {
                 $('.to-name').html(result.username);
                 $('.chat-profile').attr('src', `https://www.bootdey.com/img/Content/avatar/avatar${result.random}.png`);
                 $('#chat-screen').css('display', 'block');
             }
         });
-    });
+    }
+    else console.log('Hata');
 });
 
 $('#message-area').keypress(e => {

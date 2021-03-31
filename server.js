@@ -45,7 +45,7 @@ io.on('connection', socket => {
                 username: token_result.username,
                 user_random: from_user.random,
                 msg: res.msg,
-                date: new Date().toISOString()
+                date: new Date().toUTCString()
             };
 
             message.type = 'send';
