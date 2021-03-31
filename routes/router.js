@@ -26,7 +26,7 @@ router.get('/find/:id', (req, res) => {
     if(!token_result) return res.json({});
 
     res.json({
-        my_random: token_result.random,
+        from_user: {username: token_result.username, random: token_result.random},
         to_user: findUser(req.params.id)
     });
 });

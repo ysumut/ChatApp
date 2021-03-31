@@ -2,7 +2,7 @@ const socket = io();
 const token = ("; " + document.cookie).split("; chatapp_token=").pop().split(";").shift();
 const chat_container = document.querySelector('.chatContainerScroll');
 
-let to_id = "";
+let to_id = "", typing_count = 0;
 
 localStorage.setItem('chatapp-messages', "[]");
 
@@ -54,22 +54,6 @@ const printMsg = (type, random, username, msg, date) => {
 
 socket.emit('join_app', token);
 
-socket.on('chat_message', res => {
-    // Convert UTC to Local Time
-    let message_date = new Date(res.date).toLocaleTimeString().substr(0, 5);
-
-    // Print chat screen
-    if(res.type == 'send' || (res.type == 'get' && to_id == res.from_id))
-        printMsg(res.type, res.user_random, res.username, res.msg, message_date);
-
-    // Add local storage
-    let user_id = (res.type == 'get') ? res.from_id : res.to_id;
-    addLocalMsg(user_id, { type: res.type, msg: res.msg, date: message_date });
-
-    // Scroll down
-    chat_container.scrollTop = chat_container.scrollHeight;
-});
-
 socket.on('users_list', users => {
     $('.users').html('');
 
@@ -89,6 +73,35 @@ socket.on('users_list', users => {
     };
 });
 
+socket.on('chat_message', res => {
+    // Convert UTC to Local Time
+    let message_date = new Date(res.date).toLocaleTimeString().substr(0, 5);
+
+    // Print chat screen
+    if (res.type == 'send' || (res.type == 'get' && to_id == res.from_id))
+        printMsg(res.type, res.user_random, res.username, res.msg, message_date);
+
+    // Add local storage
+    let user_id = (res.type == 'get') ? res.from_id : res.to_id;
+    addLocalMsg(user_id, { type: res.type, msg: res.msg, date: message_date });
+
+    // Scroll down
+    chat_container.scrollTop = chat_container.scrollHeight;
+});
+
+socket.on('chat_typing', res => {
+    if(res) {
+        $('#typing').css('visibility','visible');
+        typing_count++;
+        let scope_typing_count = typing_count;
+
+        setTimeout(() => {
+            if(scope_typing_count == typing_count)
+                $('#typing').css('visibility','hidden');
+        }, 1000);
+    }
+});
+
 $(document).on('click', '.person', e => {
     let person_id = e.currentTarget.id;
 
@@ -96,7 +109,9 @@ $(document).on('click', '.person', e => {
         to_id = person_id;
 
         $.get('/find/' + person_id, (result) => {
+            let from_user = result.from_user;
             let to_user = result.to_user;
+
             if (to_user) {
                 $('.to-name').html(to_user.username);
                 $('.chat-profile').attr('src', `https://www.bootdey.com/img/Content/avatar/avatar${to_user.random}.png`);
@@ -104,9 +119,10 @@ $(document).on('click', '.person', e => {
 
                 let local_chat = getLocalMsg(person_id);
                 if (local_chat) {
-                    for(let each of local_chat.messages) {
-                        let random = (each.type == 'get') ? to_user.random : result.my_random;
-                        printMsg(each.type, random, to_user.username, each.msg, each.date);
+                    for (let each of local_chat.messages) {
+                        let username = (each.type == 'get') ? to_user.username : from_user.username;
+                        let random = (each.type == 'get') ? to_user.random : from_user.random;
+                        printMsg(each.type, random, username, each.msg, each.date);
                     }
                 }
 
@@ -120,6 +136,8 @@ $(document).on('click', '.person', e => {
 });
 
 $('#message-area').keypress(e => {
+    socket.emit('chat_typing', { to_id });
+    
     if (e.which == 13) {
         let msg = e.currentTarget.value.trim();
         e.currentTarget.value = '';

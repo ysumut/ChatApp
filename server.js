@@ -59,6 +59,10 @@ io.on('connection', socket => {
         else return;
     });
 
+    socket.on('chat_typing', (res) => {
+        io.to(res.to_id).emit('chat_typing', true);
+    });
+
     socket.on('disconnect', () => {
         removeUser(socket.id);
         io.emit('users_list', getUsersList());
