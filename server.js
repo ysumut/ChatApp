@@ -24,19 +24,19 @@ app.use('/', router);
 // Socket io Connection
 io.on('connection', socket => {
 
-    socket.on('join_app', (info) => {
-        let token_result = verify(info.token);
+    socket.on('join_app', (token) => {
+        let token_result = verify(token);
 
-        if (token_result) {
-            user = addUser(socket.id, token_result.username, info.random);
-        }
+        if (token_result) addUser(socket.id, token_result.username, token_result.random);
         else return;
 
-        socket.emit('user_me', user);
         io.emit('users_list', getUsersList());
     });
 
     socket.on('chat_message', (res) => {
+        let msg = res.msg.trim();
+        if(!msg) return;
+
         let token_result = verify(res.token);
         let from_user = findUser(socket.id);
 
@@ -44,8 +44,10 @@ io.on('connection', socket => {
             const message = {
                 username: token_result.username,
                 user_random: from_user.random,
-                msg: res.msg,
-                date: new Date().toUTCString()
+                msg: msg,
+                date: new Date().toUTCString(),
+                from_id: from_user.id,
+                to_id: res.to_id
             };
 
             message.type = 'send';

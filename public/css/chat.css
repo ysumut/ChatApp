@@ -224,7 +224,7 @@ body {
     font-weight: 300;
     line-height: 150%;
     position: relative;
-    width: 300px;
+    max-width: 300px;
 }
 
 .chat-container li .chat-text:before {
@@ -277,7 +277,7 @@ body {
 
     .chat-container li .chat-text {
         font-size: .8rem;
-        width: 150px;
+        max-width: 150px;
     }
 }
 

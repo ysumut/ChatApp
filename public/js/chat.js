@@ -1,44 +1,70 @@
 const socket = io();
 const token = ("; " + document.cookie).split("; chatapp_token=").pop().split(";").shift();
-const random = Math.floor(Math.random() * 8) + 1;
 const chat_container = document.querySelector('.chatContainerScroll');
 
-let userInfo = {};
 let to_id = "";
 
-socket.emit('join_app', { token, random });
+localStorage.setItem('chatapp-messages', "[]");
 
-socket.on('user_me', res => {
-    userInfo = res;
-});
+const addLocalMsg = (user_id, message) => {
+    let local_chat = JSON.parse(localStorage.getItem('chatapp-messages'));
+    let chat_id = local_chat.findIndex(item => item.id == user_id);
 
-socket.on('chat_message', res => {
-    let message_date = new Date(res.date).toLocaleTimeString().substr(0, 5);
+    if (chat_id == -1) {
+        local_chat.push({
+            id: user_id,
+            messages: [message]
+        });
+    }
+    else {
+        local_chat[chat_id].messages.push(message);
+    }
 
-    if (res.type == 'get') {
+    localStorage.setItem('chatapp-messages', JSON.stringify(local_chat));
+}
+
+const getLocalMsg = (user_id) => JSON.parse(localStorage.getItem('chatapp-messages')).find(item => item.id == user_id);
+
+const printMsg = (type, random, username, msg, date) => {
+    if (type == 'get') {
         $('.chatContainerScroll').append(`
-        <li class="chat-left">
-            <div class="chat-avatar">
-                <img src="https://www.bootdey.com/img/Content/avatar/avatar${res.user_random}.png">
-                <div class="chat-name">${res.username}</div>
-            </div>
-            <div class="chat-text">${res.msg}</div>
-            <div class="chat-hour">${message_date} <span class="fa fa-check-circle"></span></div>
-        </li>
+            <li class="chat-left">
+                <div class="chat-avatar">
+                    <img src="https://www.bootdey.com/img/Content/avatar/avatar${random}.png">
+                    <div class="chat-name">${username}</div>
+                </div>
+                <div class="chat-text">${msg}</div>
+                <div class="chat-hour">${date} <span class="fa fa-check-circle"></span></div>
+            </li>
         `);
     }
-    if (res.type == 'send') {
+    if (type == 'send') {
         $('.chatContainerScroll').append(`
             <li class="chat-right">
-                <div class="chat-hour">${message_date} <span class="fa fa-check-circle"></span></div>
-                <div class="chat-text">${res.msg}</div>
+                <div class="chat-hour">${date} <span class="fa fa-check-circle"></span></div>
+                <div class="chat-text">${msg}</div>
                 <div class="chat-avatar">
-                    <img src="https://www.bootdey.com/img/Content/avatar/avatar${res.user_random}.png">
-                    <div class="chat-name">${res.username}</div>
+                    <img src="https://www.bootdey.com/img/Content/avatar/avatar${random}.png">
+                    <div class="chat-name">${username}</div>
                 </div>
             </li>
         `);
     }
+}
+
+socket.emit('join_app', token);
+
+socket.on('chat_message', res => {
+    // Convert UTC to Local Time
+    let message_date = new Date(res.date).toLocaleTimeString().substr(0, 5);
+
+    // Print chat screen
+    if(res.type == 'send' || (res.type == 'get' && to_id == res.from_id))
+        printMsg(res.type, res.user_random, res.username, res.msg, message_date);
+
+    // Add local storage
+    let user_id = (res.type == 'get') ? res.from_id : res.to_id;
+    addLocalMsg(user_id, { type: res.type, msg: res.msg, date: message_date });
 
     // Scroll down
     chat_container.scrollTop = chat_container.scrollHeight;
@@ -70,9 +96,22 @@ $(document).on('click', '.person', e => {
         to_id = person_id;
 
         $.get('/find/' + person_id, (result) => {
-            if (result) {
-                $('.to-name').html(result.username);
-                $('.chat-profile').attr('src', `https://www.bootdey.com/img/Content/avatar/avatar${result.random}.png`);
+            let to_user = result.to_user;
+            if (to_user) {
+                $('.to-name').html(to_user.username);
+                $('.chat-profile').attr('src', `https://www.bootdey.com/img/Content/avatar/avatar${to_user.random}.png`);
+                $('.chatContainerScroll').html('');
+
+                let local_chat = getLocalMsg(person_id);
+                if (local_chat) {
+                    for(let each of local_chat.messages) {
+                        let random = (each.type == 'get') ? to_user.random : result.my_random;
+                        printMsg(each.type, random, to_user.username, each.msg, each.date);
+                    }
+                }
+
+                // Scroll down and visible
+                chat_container.scrollTop = chat_container.scrollHeight;
                 $('#chat-screen').css('display', 'block');
             }
         });
@@ -82,9 +121,10 @@ $(document).on('click', '.person', e => {
 
 $('#message-area').keypress(e => {
     if (e.which == 13) {
-        let msg = e.target.value.trim();
-        e.target.value = '';
+        let msg = e.currentTarget.value.trim();
+        e.currentTarget.value = '';
 
+        if (!msg) return;
         socket.emit('chat_message', { token, to_id, msg });
     }
 })
