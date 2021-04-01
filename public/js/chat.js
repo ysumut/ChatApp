@@ -90,15 +90,15 @@ socket.on('chat_message', res => {
 });
 
 socket.on('chat_typing', res => {
-    if(res) {
-        $('#typing').css('visibility','visible');
+    if (res.from_id == to_id) {
+        $('#typing').css('visibility', 'visible');
         typing_count++;
         let scope_typing_count = typing_count;
 
         setTimeout(() => {
-            if(scope_typing_count == typing_count)
-                $('#typing').css('visibility','hidden');
-        }, 1000);
+            if (scope_typing_count == typing_count)
+                $('#typing').css('visibility', 'hidden');
+        }, 500);
     }
 });
 
@@ -137,7 +137,7 @@ $(document).on('click', '.person', e => {
 
 $('#message-area').keypress(e => {
     socket.emit('chat_typing', { to_id });
-    
+
     if (e.which == 13) {
         let msg = e.currentTarget.value.trim();
         e.currentTarget.value = '';

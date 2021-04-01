@@ -35,7 +35,7 @@ io.on('connection', socket => {
 
     socket.on('chat_message', (res) => {
         let msg = res.msg.trim();
-        if(!msg) return;
+        if (!msg) return;
 
         let token_result = verify(res.token);
         let from_user = findUser(socket.id);
@@ -60,7 +60,7 @@ io.on('connection', socket => {
     });
 
     socket.on('chat_typing', (res) => {
-        io.to(res.to_id).emit('chat_typing', true);
+        io.to(res.to_id).emit('chat_typing', { from_id: socket.id });
     });
 
     socket.on('disconnect', () => {
