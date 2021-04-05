@@ -7,11 +7,11 @@ let to_id = "", typing_count = 0;
 
 localStorage.setItem('chatapp-messages', "[]");
 
+const getLocalMsg = (user_id) => JSON.parse(localStorage.getItem('chatapp-messages')).find(item => item.id == user_id);
+
 const addLocalMsg = (user_id, message) => {
     let local_chat = JSON.parse(localStorage.getItem('chatapp-messages'));
     let chat_id = local_chat.findIndex(item => item.id == user_id);
-
-    message.is_read = false;
 
     if (chat_id == -1) {
         local_chat.push({
@@ -26,9 +26,9 @@ const addLocalMsg = (user_id, message) => {
     localStorage.setItem('chatapp-messages', JSON.stringify(local_chat));
 }
 
-const getLocalMsg = (user_id) => JSON.parse(localStorage.getItem('chatapp-messages')).find(item => item.id == user_id);
+const printMsg = (type, random, username, msg, date, is_read) => {
+    let check_color = is_read ? 'green' : 'grey';
 
-const printMsg = (type, random, username, msg, date) => {
     if (type == 'get') {
         $('.chatContainerScroll').append(`
             <li class="chat-left">
@@ -37,14 +37,14 @@ const printMsg = (type, random, username, msg, date) => {
                     <div class="chat-name">${username}</div>
                 </div>
                 <div class="chat-text">${msg}</div>
-                <div class="chat-hour">${date} <span class="fa fa-check-circle"></span></div>
+                <div class="chat-hour">${date} <span class="fa fa-check-circle" style="color: ${check_color}"></span></div>
             </li>
         `);
     }
     if (type == 'send') {
         $('.chatContainerScroll').append(`
             <li class="chat-right">
-                <div class="chat-hour">${date} <span class="fa fa-check-circle"></span></div>
+                <div class="chat-hour">${date} <span class="fa fa-check-circle" style="color: ${check_color}"></span></div>
                 <div class="chat-text">${msg}</div>
                 <div class="chat-avatar">
                     <img src="https://www.bootdey.com/img/Content/avatar/avatar${random}.png">
@@ -69,7 +69,7 @@ socket.on('users_list', users => {
                 </div>
                 <p class="name-time">
                     <span class="name">${each.username}</span>
-                    <span class="time"></span>
+                    <span id="unread" class="badge badge-pill badge-success" style="visibility: hidden;">0</span>
                 </p>
             </li>
         `);
@@ -77,16 +77,22 @@ socket.on('users_list', users => {
 });
 
 socket.on('chat_message', res => {
+    let is_read = (res.type == 'get' && to_id == res.from_id) ? true : false;
+
     // Convert UTC to Local Time
     let message_date = new Date(res.date).toLocaleTimeString().substr(0, 5);
 
     // Print chat screen
-    if (res.type == 'send' || (res.type == 'get' && to_id == res.from_id))
-        printMsg(res.type, res.user_random, res.username, res.msg, message_date);
+    if (res.type == 'send' || (res.type == 'get' && to_id == res.from_id)) {
+        printMsg(res.type, res.user_random, res.username, res.msg, message_date, is_read);
+    }
 
     // Add local storage
     let user_id = (res.type == 'get') ? res.from_id : res.to_id;
-    addLocalMsg(user_id, { type: res.type, msg: res.msg, date: message_date });
+    addLocalMsg(user_id, { type: res.type, msg: res.msg, date: message_date, is_read });
+
+    // Read all messages of person
+    if(is_read) socket.emit('read_messages', { to_id: res.from_id });
 
     // Scroll down
     chat_container.scrollTop = chat_container.scrollHeight;
@@ -105,6 +111,22 @@ socket.on('chat_typing', res => {
     }
 });
 
+socket.on('read_messages', res => {
+    let local_chat = JSON.parse(localStorage.getItem('chatapp-messages'));
+    let chat_id = local_chat.findIndex(item => item.id == res.user_id);
+
+    if (chat_id !== -1) {
+        for (let each of local_chat[chat_id].messages) each.is_read = true;
+        localStorage.setItem('chatapp-messages', JSON.stringify(local_chat));
+
+        if (res.user_id == to_id) {
+            let person = $('li#' + res.user_id).find('#unread');
+            person.html(0);
+            person.css('visibility', 'hidden');
+        }
+    }
+});
+
 $(document).on('click', '.person', e => {
     let person_id = e.currentTarget.id;
 
@@ -120,12 +142,15 @@ $(document).on('click', '.person', e => {
                 $('.chat-profile').attr('src', `https://www.bootdey.com/img/Content/avatar/avatar${to_user.random}.png`);
                 $('.chatContainerScroll').html('');
 
+                // Read all messages of person
+                socket.emit('read_messages', { to_id: person_id });
+
                 let local_chat = getLocalMsg(person_id);
                 if (local_chat) {
                     for (let each of local_chat.messages) {
                         let username = (each.type == 'get') ? to_user.username : from_user.username;
                         let random = (each.type == 'get') ? to_user.random : from_user.random;
-                        printMsg(each.type, random, username, each.msg, each.date);
+                        printMsg(each.type, random, username, each.msg, each.date, each.is_read);
                     }
                 }
 
@@ -139,20 +164,36 @@ $(document).on('click', '.person', e => {
 });
 
 message_area.keydown(e => {
-    socket.emit('chat_typing', { to_id });
-
-    if(e.which == 13) { // press enter
+    if (e.which == 13) { // press enter
         e.preventDefault();
         send_button.click();
+    }
+    else {
+        socket.emit('chat_typing', { to_id });
     }
 });
 
 send_button.click(() => {
     let msg = message_area.val().trim();
     message_area.val('');
-    message_area.attr('rows', 1);
     message_area.focus();
 
     if (!msg) return;
     socket.emit('chat_message', { token, to_id, msg });
 });
+
+setInterval(() => {
+    const chatapp_local = JSON.parse(localStorage.getItem('chatapp-messages'));
+
+    for (let each of chatapp_local) {
+        let unread_count = 0;
+
+        for (let msg of each.messages) if (msg.type == 'get' && !msg.is_read) unread_count++;
+
+        if (unread_count > 0) {
+            let person = $('li#' + each.id).find('#unread');
+            person.html(unread_count);
+            person.css('visibility', 'visible');
+        }
+    }
+}, 1000);

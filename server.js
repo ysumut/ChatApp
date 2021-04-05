@@ -63,6 +63,11 @@ io.on('connection', socket => {
         io.to(res.to_id).emit('chat_typing', { from_id: socket.id });
     });
 
+    socket.on('read_messages', (res) => {
+        socket.emit('read_messages', { user_id: res.to_id });
+        io.to(res.to_id).emit('read_messages', { user_id: socket.id });
+    });
+
     socket.on('disconnect', () => {
         removeUser(socket.id);
         io.emit('users_list', getUsersList());
