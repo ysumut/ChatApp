@@ -37,7 +37,7 @@ const printMsg = (type, random, username, msg, date, is_read) => {
                     <div class="chat-name">${username}</div>
                 </div>
                 <div class="chat-text">${msg}</div>
-                <div class="chat-hour">${date} <span class="fa fa-check-circle" style="color: ${check_color}"></span></div>
+                <div class="chat-hour">${date}</div>
             </li>
         `);
     }
