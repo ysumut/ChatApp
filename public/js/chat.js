@@ -1,6 +1,7 @@
 const socket = io();
 const token = ("; " + document.cookie).split("; chatapp_token=").pop().split(";").shift();
 const chat_container = document.querySelector('.chatContainerScroll');
+const message_area = $('#message-area'), send_button = $('#send-button');
 
 let to_id = "", typing_count = 0;
 
@@ -9,6 +10,8 @@ localStorage.setItem('chatapp-messages', "[]");
 const addLocalMsg = (user_id, message) => {
     let local_chat = JSON.parse(localStorage.getItem('chatapp-messages'));
     let chat_id = local_chat.findIndex(item => item.id == user_id);
+
+    message.is_read = false;
 
     if (chat_id == -1) {
         local_chat.push({
@@ -135,14 +138,21 @@ $(document).on('click', '.person', e => {
     else console.log('Hata');
 });
 
-$('#message-area').keypress(e => {
+message_area.keydown(e => {
     socket.emit('chat_typing', { to_id });
 
-    if (e.which == 13) {
-        let msg = e.currentTarget.value.trim();
-        e.currentTarget.value = '';
-
-        if (!msg) return;
-        socket.emit('chat_message', { token, to_id, msg });
+    if(e.which == 13) { // press enter
+        e.preventDefault();
+        send_button.click();
     }
-})
+});
+
+send_button.click(() => {
+    let msg = message_area.val().trim();
+    message_area.val('');
+    message_area.attr('rows', 1);
+    message_area.focus();
+
+    if (!msg) return;
+    socket.emit('chat_message', { token, to_id, msg });
+});

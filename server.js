@@ -34,7 +34,7 @@ io.on('connection', socket => {
     });
 
     socket.on('chat_message', (res) => {
-        let msg = res.msg.trim();
+        let msg = res.msg.trim().replace(/<[^>]*>?/gm, '');
         if (!msg) return;
 
         let token_result = verify(res.token);

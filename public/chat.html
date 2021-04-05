@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <!--  This file has been downloaded from bootdey.com    @bootdey on twitter -->
     <!--  All snippets are MIT license http://bootdey.com/license -->
@@ -12,6 +13,7 @@
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
     <link href="/css/chat.css" rel="stylesheet">
 </head>
+
 <body>
     <div class="container">
 
@@ -50,24 +52,31 @@
                                         </div>
                                     </div>
                                     <ul class="users">
-                                        
+
                                     </ul>
                                 </div>
                             </div>
                             <div class="col-md-8" id="chat-screen" style="display: none;">
                                 <div class="selected-user">
                                     <span>To: <span class="to-name"> - </span></span>
-                                    <span class="badge badge-pill badge-success" id="typing" style="visibility: hidden;">typing...</span>
+                                    <span class="badge badge-pill badge-success" id="typing"
+                                        style="visibility: hidden;">typing...</span>
                                     <span class="float-right pt-3">
                                         <img class="chat-profile">
                                     </span>
                                 </div>
                                 <div class="chat-container">
                                     <ul class="chatContainerScroll" style="height: 400px; overflow-y: scroll;">
-                                    
+
                                     </ul>
-                                    <div class="form-group mt-3 mb-0">
-                                        <textarea class="form-control" id="message-area" placeholder="Type your message here..."></textarea>
+                                    <div class="input-group mt-3 mb-0">
+                                        <textarea class="form-control" id="message-area"
+                                            placeholder="Type your message here..." rows="1"></textarea>
+                                        <div class="input-group-prepend">
+                                            <button class="btn btn-outline-success btn-sm" id="send-button">
+                                                <img src="/images/send.png">
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -91,4 +100,5 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/chat.js"></script>
 </body>
+
 </html>
