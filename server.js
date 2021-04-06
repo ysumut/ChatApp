@@ -64,9 +64,13 @@ io.on('connection', socket => {
     });
 
     socket.on('read_messages', (res) => {
-        socket.emit('read_messages', { user_id: res.msg_own, is_own: false });
+        let user_1 = findUser(res.msg_own);
+        let user_2 = findUser(socket.id);
 
-        io.to(res.msg_own).emit('read_messages', { user_id: socket.id, is_own: true });
+        if (user_1 && user_2) {
+            socket.emit('read_messages', { user_id: res.msg_own, is_own: false, user_1, user_2 });
+            io.to(res.msg_own).emit('read_messages', { user_id: socket.id, is_own: true, user_1, user_2 });
+        }
     });
 
     socket.on('disconnect', () => {

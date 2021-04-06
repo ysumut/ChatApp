@@ -7,7 +7,10 @@ router.get('/', (req, res) => res.sendFile('public/login.html', { root: __dirnam
 
 router.post('/login', (req, res) => {
     const random = Math.floor(Math.random() * 8) + 1;
-    const token = sign({ username: req.body.username, random: random });
+    const token = sign({ 
+        username: req.body.username.trim().replace(/<[^>]*>?/gm, ''), 
+        random: random 
+    });
     
     res.cookie('chatapp_token', token);
     return res.redirect('/chat');
@@ -26,7 +29,6 @@ router.get('/find/:id', (req, res) => {
     if(!token_result) return res.json({});
 
     res.json({
-        from_user: {username: token_result.username, random: token_result.random},
         to_user: findUser(req.params.id)
     });
 });

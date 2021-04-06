@@ -125,6 +125,23 @@ socket.on('read_messages', res => {
             let person = $('li#' + res.user_id).find('#unread');
             person.html(0);
             person.css('visibility', 'hidden');
+
+            let to_user = (res.user_id == res.user_1.id) ? res.user_1 : res.user_2;
+            let from_user = (res.user_id == res.user_1.id) ? res.user_2 : res.user_1;
+
+            // Print messages
+            chat_container.html('');
+            let local_chat = getLocalMsg(res.user_id);
+            if (local_chat) {
+                for (let each of local_chat.messages) {
+                    let username = (each.type == 'get') ? to_user.username : from_user.username;
+                    let random = (each.type == 'get') ? to_user.random : from_user.random;
+                    printMsg(each.type, random, username, each.msg, each.date, each.is_read);
+                }
+
+                // Scroll down
+                chat_container.scrollTop(chat_container.prop('scrollHeight'));
+            }
         }
     }
 });
@@ -136,7 +153,6 @@ $(document).on('click', '.person', e => {
         to_id = person_id;
 
         $.get('/find/' + person_id, (result) => {
-            let from_user = result.from_user;
             let to_user = result.to_user;
 
             if (to_user) {
@@ -147,17 +163,7 @@ $(document).on('click', '.person', e => {
                 // Read all messages of person
                 socket.emit('read_messages', { msg_own: person_id });
 
-                let local_chat = getLocalMsg(person_id);
-                if (local_chat) {
-                    for (let each of local_chat.messages) {
-                        let username = (each.type == 'get') ? to_user.username : from_user.username;
-                        let random = (each.type == 'get') ? to_user.random : from_user.random;
-                        printMsg(each.type, random, username, each.msg, each.date, each.is_read);
-                    }
-                }
-
-                // Scroll down and visible
-                chat_container.scrollTop(chat_container.prop('scrollHeight'));
+                // Chat visible
                 $('#chat-screen').css('display', 'block');
             }
         });
