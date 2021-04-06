@@ -1,6 +1,6 @@
 const socket = io();
 const token = ("; " + document.cookie).split("; chatapp_token=").pop().split(";").shift();
-const chat_container = document.querySelector('.chatContainerScroll');
+const chat_container = $('.chatContainerScroll');
 const message_area = $('#message-area'), send_button = $('#send-button');
 
 let to_id = "", typing_count = 0;
@@ -27,10 +27,11 @@ const addLocalMsg = (user_id, message) => {
 }
 
 const printMsg = (type, random, username, msg, date, is_read) => {
+    let check_class = is_read ? 'fa fa-check-circle' : 'fa fa-check';
     let check_color = is_read ? 'green' : 'grey';
 
     if (type == 'get') {
-        $('.chatContainerScroll').append(`
+        chat_container.append(`
             <li class="chat-left">
                 <div class="chat-avatar">
                     <img src="https://www.bootdey.com/img/Content/avatar/avatar${random}.png">
@@ -42,9 +43,9 @@ const printMsg = (type, random, username, msg, date, is_read) => {
         `);
     }
     if (type == 'send') {
-        $('.chatContainerScroll').append(`
+        chat_container.append(`
             <li class="chat-right">
-                <div class="chat-hour">${date} <span class="fa fa-check-circle" style="color: ${check_color}"></span></div>
+                <div class="chat-hour">${date} <span class="${check_class}" style="color: ${check_color}"></span></div>
                 <div class="chat-text">${msg}</div>
                 <div class="chat-avatar">
                     <img src="https://www.bootdey.com/img/Content/avatar/avatar${random}.png">
@@ -92,10 +93,10 @@ socket.on('chat_message', res => {
     addLocalMsg(user_id, { type: res.type, msg: res.msg, date: message_date, is_read });
 
     // Read all messages of person
-    if(is_read) socket.emit('read_messages', { msg_own: res.from_id });
+    if (is_read) socket.emit('read_messages', { msg_own: res.from_id });
 
     // Scroll down
-    chat_container.scrollTop = chat_container.scrollHeight;
+    chat_container.scrollTop(chat_container.prop('scrollHeight'));
 });
 
 socket.on('chat_typing', res => {
@@ -117,7 +118,7 @@ socket.on('read_messages', res => {
     let msg_type = res.is_own ? 'send' : 'get';
 
     if (chat_id !== -1) {
-        for (let each of local_chat[chat_id].messages) if(each.type == msg_type) each.is_read = true;
+        for (let each of local_chat[chat_id].messages) if (each.type == msg_type) each.is_read = true;
         localStorage.setItem('chatapp-messages', JSON.stringify(local_chat));
 
         if (res.user_id == to_id) {
@@ -141,7 +142,7 @@ $(document).on('click', '.person', e => {
             if (to_user) {
                 $('.to-name').html(to_user.username);
                 $('.chat-profile').attr('src', `https://www.bootdey.com/img/Content/avatar/avatar${to_user.random}.png`);
-                $('.chatContainerScroll').html('');
+                chat_container.html('');
 
                 // Read all messages of person
                 socket.emit('read_messages', { msg_own: person_id });
@@ -156,7 +157,7 @@ $(document).on('click', '.person', e => {
                 }
 
                 // Scroll down and visible
-                chat_container.scrollTop = chat_container.scrollHeight;
+                chat_container.scrollTop(chat_container.prop('scrollHeight'));
                 $('#chat-screen').css('display', 'block');
             }
         });
