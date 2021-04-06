@@ -92,7 +92,7 @@ socket.on('chat_message', res => {
     addLocalMsg(user_id, { type: res.type, msg: res.msg, date: message_date, is_read });
 
     // Read all messages of person
-    if(is_read) socket.emit('read_messages', { to_id: res.from_id });
+    if(is_read) socket.emit('read_messages', { msg_own: res.from_id });
 
     // Scroll down
     chat_container.scrollTop = chat_container.scrollHeight;
@@ -114,9 +114,10 @@ socket.on('chat_typing', res => {
 socket.on('read_messages', res => {
     let local_chat = JSON.parse(localStorage.getItem('chatapp-messages'));
     let chat_id = local_chat.findIndex(item => item.id == res.user_id);
+    let msg_type = res.is_own ? 'send' : 'get';
 
     if (chat_id !== -1) {
-        for (let each of local_chat[chat_id].messages) each.is_read = true;
+        for (let each of local_chat[chat_id].messages) if(each.type == msg_type) each.is_read = true;
         localStorage.setItem('chatapp-messages', JSON.stringify(local_chat));
 
         if (res.user_id == to_id) {
@@ -143,7 +144,7 @@ $(document).on('click', '.person', e => {
                 $('.chatContainerScroll').html('');
 
                 // Read all messages of person
-                socket.emit('read_messages', { to_id: person_id });
+                socket.emit('read_messages', { msg_own: person_id });
 
                 let local_chat = getLocalMsg(person_id);
                 if (local_chat) {

@@ -64,8 +64,9 @@ io.on('connection', socket => {
     });
 
     socket.on('read_messages', (res) => {
-        socket.emit('read_messages', { user_id: res.to_id });
-        io.to(res.to_id).emit('read_messages', { user_id: socket.id });
+        socket.emit('read_messages', { user_id: res.msg_own, is_own: false });
+
+        io.to(res.msg_own).emit('read_messages', { user_id: socket.id, is_own: true });
     });
 
     socket.on('disconnect', () => {
