@@ -1,4 +1,4 @@
-# Chat App (demo)
+# Chat App
 
 ### How to run?
 1) command -> `npm install`
