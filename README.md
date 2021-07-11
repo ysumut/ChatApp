@@ -1,8 +1,9 @@
 # Chat App
 
 ### How to run?
-1) command -> `npm install`
-2) command -> `npm run start`
+     
+     command -> `npm install`
+     command -> `npm run start`
 <br>
 
 <h3>Used in the project:</h3>
